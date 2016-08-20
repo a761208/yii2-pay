@@ -1,0 +1,21 @@
+{
+    "name": "a76/yii2-pay",
+    "description": "Extension for some third party payment.",
+    "type": "yii2-extension",
+    "keywords": ["yii2", "extension", "pay"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "A761208",
+            "email": "a761208@gmail.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "2.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "a76\\pay\\": ""
+        }
+    }
+}
