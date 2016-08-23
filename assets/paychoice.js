@@ -33,6 +33,10 @@ jQuery(function($) {
                 }
 
                 var url = this.href;
+                var pay_params = pay_init();
+                $.each(pay_params, function(index, value) {
+                    url += "&" + index + "=" + value;
+                });
                 var popupOptions = $.extend({}, options.popup); // clone
 
                 var localPopupWidth = this.getAttribute('data-popup-width');

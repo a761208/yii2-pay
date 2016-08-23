@@ -23,6 +23,12 @@ use a76\pay\ClientInterface;
  *     'canCOD' => false,
  * ]); ?>
  * <script>
+ * function pay_init() {
+ *     return {
+ *         'name':'商品名称',
+ *         'money':支付金额
+ *     };
+ * }
  * function pay_callback(pay_success, is_cod) {
  *     console.log("支付结果 boolean：" + pay_success);
  *     console.log("货到付款 boolean：" + is_cod);
@@ -212,7 +218,6 @@ class PayChoice extends Widget
         $this->autoRender = false;
         $url = $this->getBasePayUrl();
         $url[$this->clientIdGetParamName] = $provider->getId();
-        $url['basePayUrl'] = Url::to($this->getBasePayUrl());
 
         return Url::to($url);
     }
@@ -238,7 +243,7 @@ class PayChoice extends Widget
     {
         $view = Yii::$app->getView();
         if ($this->popupMode) {
-        PayChoiceAsset::register($view);
+            PayChoiceAsset::register($view);
             if (empty($this->clientOptions)) {
                 $options = '';
             } else {

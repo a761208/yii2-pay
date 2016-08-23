@@ -45,7 +45,7 @@ use Yii;
  * @property string $cancelUrl Cancel URL.
  * @property string $successUrl Successful URL.
  */
-class PayAction extends Action
+class PayNotifyAction extends Action
 {
     /**
      * @var string name of the pay client collection application component.
@@ -154,23 +154,20 @@ class PayAction extends Action
      */
     public function run()
     {
-        if (!empty($_GET[$this->clientIdGetParamName])) {
-            $clientId = $_GET[$this->clientIdGetParamName];
-            /* @var $collection \a76\pay\Collection */
-            $collection = Yii::$app->get($this->clientCollection);
-            if (!$collection->hasClient($clientId)) {
-                throw new NotFoundHttpException("Unknown pay client '{$clientId}'");
-            }
-            $client = $collection->getClient($clientId);
-            if (Yii::$app->request->get('action') == 'check_pay_result') {
-                // 检查支付结果
-                // 如果支付成功
-                return $client->getPayResult();
-            }
-            return $this->initPay($client, Yii::$app->request->get());
-        } else {
-            throw new NotFoundHttpException();
+        $raw = file_get_contents('php://input');
+        if (empty($raw)) {
+            // POST_RAW_DATA 没有内容
         }
+        Yii::error($raw);
+        // TODO：支付回调通知：此处需要判断回调来源：如微信/支付宝/...
+        $xml = simplexml_load_string($raw, 'SimpleXMLElement', LIBXML_NOCDATA);
+        $xml = (array) $xml;
+        if ($xml['return_code'] != 'SUCCESS') {
+            $msg = $xml['return_msg'];
+            echo '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
+            return;
+        }
+        echo '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
     }
 
     /**

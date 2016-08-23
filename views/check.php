@@ -2,7 +2,7 @@
 use yii\helpers\Html;
 use yii\web\YiiAsset;
 
-/* @var $this \yii\base\View */
+/* @var $this \yii\web\View */
 /* @var $params array 支付参数 */
 
 YiiAsset::register($this);

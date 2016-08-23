@@ -8,7 +8,7 @@ use yii\web\AssetBundle;
  */
 class PayChoiceAsset extends AssetBundle
 {
-    public $sourcePath = '@a76/pay/assets';
+    public $sourcePath = '@vendor/a76/yii2-pay/assets';
     public $js = [
         'paychoice.js',
     ];
