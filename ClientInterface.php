@@ -44,6 +44,11 @@ interface ClientInterface
     public function setPayId($pay_id);
     
     /**
+     * @return string 唯一支付编码
+     */
+    public function getPayId();
+    
+    /**
      * 初始化支付：显示支付页面等
      * @param array 支付参数
      * @return string 页面内容

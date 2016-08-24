@@ -123,6 +123,14 @@ abstract class BaseClient extends Component implements ClientInterface
     }
     
     /**
+     * {@inheritDoc}
+     * @see \a76\pay\ClientInterface::getPayId()
+     */
+    public function getPayId() {
+        return $this->_pay_id;
+    }
+    
+    /**
      * 返回支付编号
      * @return string
      */
