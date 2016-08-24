@@ -2,7 +2,7 @@
 namespace a76\pay\clients;
 
 use a76\pay\BaseClient;
-use a76\pay\PayAction;
+use Yii;
 
 /**
  * 货到付款
@@ -39,7 +39,13 @@ class Cod extends BaseClient
      * @see \a76\pay\BaseClient::initPay()
      */
     public function initPay($params) {
-        return $this->renderCheck($params);
+        Yii::$app->cache->set('pay_' . $params['id'], 'success');
+        /* @var $view \yii\web\View */
+        $view = Yii::$app->getView();
+        $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $this->id . '.php';
+        return $view->renderFile($viewFile, [
+            'params'=>$params,
+        ]);
     }
     
     /**
@@ -47,11 +53,10 @@ class Cod extends BaseClient
      * {@inheritDoc}
      * @see \a76\pay\BaseClient::getPayResult()
      */
-    public function getPayResult() {
+    public function getPayResult($params) {
         return [
-            'result'=>'success',
-            'pay_result'=>'success',
-            'is_cod'=>true,
+            'pay_result'=>Yii::$app->cache->get('pay_' . $params['id']),
+            'is_cod'=>true
         ];
     }
 }

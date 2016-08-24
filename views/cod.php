@@ -32,8 +32,8 @@ $params['action'] = 'check_pay_result';
                     } else {
                         window.location = url;
                     }
-                    return true;
                 }
+                return true;
             }
             window.setTimeout(function() {checkPayResult();}, 1000);
         });
@@ -44,7 +44,7 @@ $params['action'] = 'check_pay_result';
 
 <body>
 <?php $this->beginBody() ?>
-<div id="qr"><?php echo Html::img(['/site/qr', 'content'=>$prepay['code_url']]);?></div>
+
 <?php $this->endBody() ?>
 </body>
 </html>

@@ -45,12 +45,14 @@ class Weixin extends BaseClient
      * @see \a76\pay\BaseClient::initPay()
      */
     public function initPay($params) {
+        $prepay = $this->unifiedorder($params);
+        Yii::$app->cache->set('pay_' . $params['id'], 'waiting');
         /* @var $view \yii\web\View */
         $view = Yii::$app->getView();
-        $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'weixin.php';
+        $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $this->id . '.php';
         return $view->renderFile($viewFile, [
             'params'=>$params,
-            'prepay'=>$this->unifiedorder($params)
+            'prepay'=>$prepay,
         ]);
     }
     
@@ -59,10 +61,9 @@ class Weixin extends BaseClient
      * {@inheritDoc}
      * @see \a76\pay\BaseClient::getPayResult()
      */
-    public function getPayResult() {
+    public function getPayResult($params) {
         return [
-            'result'=>'success',
-            'pay_result'=>'success',
+            'pay_result'=>Yii::$app->cache->get('pay_' . $params['id']),
         ];
     }
     
@@ -80,12 +81,12 @@ class Weixin extends BaseClient
         $post['device_info'] = 'WEB';
         $post['nonce_str'] = Yii::$app->security->generateRandomString(32);
         $post['body'] = $params['name'];
-        $post['out_trade_no'] = Yii::$app->user->id . '_' . date('YmdHis');
+        $post['out_trade_no'] = $params['id'];
         $post['total_fee'] = round($params['money'] * 100);
         $post['spbill_create_ip'] = Yii::$app->request->userIP;
         $post['notify_url'] = Yii::$app->request->hostInfo . $this->notify_url;
         $post['trade_type'] = 'NATIVE';
-        $post['sign'] = $this->makeSign($post);
+        $post['sign'] = Weixin::makeSign($post, $this->api_key);
         $xml = '<xml>';
         foreach ($post as $k=>$v) {
             $xml .= '<' . $k . '>' . $v . '</' . $k . '>';
@@ -111,7 +112,7 @@ class Weixin extends BaseClient
      * 生成签名
      * @return string
      */
-    private function makeSign($data) {
+    public static function makeSign($data, $api_key) {
         ksort($data);
         $stringA = '';
         foreach ($data as $k=>$v) {
@@ -120,7 +121,7 @@ class Weixin extends BaseClient
             }
             $stringA .= $k . '=' . $v . '&';
         }
-        $stringA .= 'key=' . $this->api_key;
+        $stringA .= 'key=' . $api_key;
         $key = md5($stringA);
         $key = strtoupper($key);
         return $key;

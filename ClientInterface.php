@@ -41,7 +41,8 @@ interface ClientInterface
     public function initPay($params);
     
     /**
-     * @return array pay result.
+     * @param array $params
+     * @return array 支付结果
      */
-    public function getPayResult();
+    public function getPayResult($params);
 }

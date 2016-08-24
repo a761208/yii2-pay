@@ -37,11 +37,6 @@ abstract class BaseClient extends Component implements ClientInterface
      * @var array view options in format: optionName => optionValue
      */
     private $_viewOptions;
-    /**
-     * @var array pay result.
-     */
-    private $_payResult;
-
 
     /**
      * @param string $id service id.
@@ -124,25 +119,6 @@ abstract class BaseClient extends Component implements ClientInterface
     }
 
     /**
-     * @param array $payResult pay result.
-     */
-    public function setPayResult($payResult)
-    {
-        $this->_payResult = $payResult;
-    }
-
-    /**
-     * @return array 支付结果
-     */
-    public function getPayResult()
-    {
-        if ($this->_payResult === null) {
-            $this->_payResult = [];
-        }
-        return $this->_payResult;
-    }
-
-    /**
      * Generates service name.
      * @return string service name.
      */
@@ -180,17 +156,12 @@ abstract class BaseClient extends Component implements ClientInterface
     }
     
     /**
-     * 检查支付结果页面
-     * @param array $params 支付参数
-     * @return string
+     * 返回支付结果
+     * {@inheritDoc}
+     * @see \a76\pay\ClientInterface::getPayResult()
      */
-    protected function renderCheck($params) {
-        /* @var $view \yii\web\View */
-        $view = Yii::$app->getView();
-        $viewFile = __DIR__ . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'check.php';
-        return $view->renderFile($viewFile, [
-            'params'=>$params
-        ]);
+    public function getPayResult($params) {
+        throw new NotSupportedException('Method "' . get_class($this) . '::' . __FUNCTION__ . '" not implemented.');
     }
 
     /**

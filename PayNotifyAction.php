@@ -8,6 +8,7 @@ use yii\helpers\Url;
 use yii\web\Response;
 use yii\web\NotFoundHttpException;
 use Yii;
+use a76\pay\clients\Weixin;
 
 /**
  * PayAction performs pay via different pay clients.
@@ -160,14 +161,39 @@ class PayNotifyAction extends Action
         }
         Yii::error($raw);
         // TODO：支付回调通知：此处需要判断回调来源：如微信/支付宝/...
+        $clientId = 'weixin';
+        /* @var $collection \yii\authclient\Collection */
+        $collection = Yii::$app->get($this->clientCollection);
+        if (!$collection->hasClient($clientId)) {
+            throw new NotFoundHttpException("Unknown auth client '{$clientId}'");
+        }
+        /* @var $client \a76\pay\ClientInterface */
+        $client = $collection->getClient($clientId);
         $xml = simplexml_load_string($raw, 'SimpleXMLElement', LIBXML_NOCDATA);
         $xml = (array) $xml;
         if ($xml['return_code'] != 'SUCCESS') {
-            $msg = $xml['return_msg'];
             echo '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
             return;
         }
+        if ($xml['result_code'] != 'SUCCESS') {
+            // 支付失败
+            echo '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
+        }
+        $sign = $xml['sign'];
+        unset($xml['sign']);
+        if (Weixin::makeSign($xml, $client->api_key) != $sign) {
+            echo '<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[签名失败]]></return_msg></xml>';
+            return;
+        }
+        // 通知成功
+        if (!is_callable($this->successCallback)) {
+            throw new InvalidConfigException('"' . get_class($this) . '::successCallback" should be a valid callback.');
+        }
+        call_user_func($this->successCallback, $client); // TODO：这里要设置成功到client里面
+        ob_clean();
+        Yii::$app->cache->set('pay_' . $xml['out_trade_no'], 'success');
         echo '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
+        return;
     }
 
     /**
