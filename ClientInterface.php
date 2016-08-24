@@ -1,37 +1,47 @@
 <?php
 namespace a76\pay;
 
+/**
+ * 支付客户端接口
+ * @author 尖刀 <a761208@gmail.com>
+ */
 interface ClientInterface
 {
     /**
-     * @param string $id service id.
+     * @param string $id 客户端编号
      */
     public function setId($id);
     
     /**
-     * @return string service id
+     * @return string 客户端编号
      */
     public function getId();
     
     /**
-     * @return string service name.
+     * @return string 客户端名称
      */
     public function getName();
     
     /**
-     * @param string $name service name.
+     * @param string $name 客户端名称
      */
     public function setName($name);
     
     /**
-     * @return string service title.
+     * @return string 客户端标题
      */
     public function getTitle();
     
     /**
-     * @param string $title service title.
+     * @param string $title 客户端标题
      */
     public function setTitle($title);
+    
+    /**
+     * 设置支付唯一编码：保存并判断支付状态
+     * @param string $pay_id 支付编码
+     */
+    public function setPayId($pay_id);
     
     /**
      * 初始化支付：显示支付页面等
@@ -41,8 +51,8 @@ interface ClientInterface
     public function initPay($params);
     
     /**
-     * @param array $params
-     * @return array 支付结果
+     * 返回支付结果
+     * @return array ['pay_result'=>'success|failure', 'is_cod'=>true|false]
      */
-    public function getPayResult($params);
+    public function getPayResult();
 }

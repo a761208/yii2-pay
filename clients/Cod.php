@@ -5,18 +5,11 @@ use a76\pay\BaseClient;
 use Yii;
 
 /**
- * 货到付款
+ * 货到付款支付
+ * @author 尖刀 <a761208@gmail.com>
  */
 class Cod extends BaseClient
 {
-    /**
-     * @inheritdoc
-     */
-     public function init()
-     {
-         parent::init();
-     }
-
     /**
      * @inheritdoc
      */
@@ -34,12 +27,11 @@ class Cod extends BaseClient
     }
     
     /**
-     * 初始化支付：货到付款直接返回支付检查页面
      * {@inheritDoc}
      * @see \a76\pay\BaseClient::initPay()
      */
     public function initPay($params) {
-        Yii::$app->cache->set('pay_' . $params['id'], 'success');
+        Yii::$app->cache->set('pay_' . $params['id'], 'success'); // 货到付款直接设置支付成功
         /* @var $view \yii\web\View */
         $view = Yii::$app->getView();
         $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $this->id . '.php';
@@ -49,13 +41,12 @@ class Cod extends BaseClient
     }
     
     /**
-     * 返回支付结果
      * {@inheritDoc}
      * @see \a76\pay\BaseClient::getPayResult()
      */
-    public function getPayResult($params) {
+    public function getPayResult() {
         return [
-            'pay_result'=>Yii::$app->cache->get('pay_' . $params['id']),
+            'pay_result'=>Yii::$app->cache->get($this->getPayId()),
             'is_cod'=>true
         ];
     }

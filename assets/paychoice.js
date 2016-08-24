@@ -1,7 +1,6 @@
 /**
- * A76 pay choice widget.
- *
- * This is the JavaScript widget used by the a76\pay\widgets\PayChoice widget.
+ * A76支付组件，负责弹出窗口，显示支付页面
+ * @author 尖刀 <a761208@gmail.com>
  */
 jQuery(function($) {
     $.fn.paychoice = function(options) {

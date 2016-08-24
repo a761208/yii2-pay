@@ -5,6 +5,7 @@ use yii\web\YiiAsset;
 
 /* @var $this \yii\web\View */
 /* @var $params array 支付参数 */
+/* @author 尖刀 <a761208@gmail.com> */
 
 YiiAsset::register($this);
 
@@ -32,8 +33,8 @@ $params['action'] = 'check_pay_result';
                     } else {
                         window.location = url;
                     }
+                    return true;
                 }
-                return true;
             }
             window.setTimeout(function() {checkPayResult();}, 1000);
         });

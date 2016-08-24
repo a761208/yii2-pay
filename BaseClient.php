@@ -5,41 +5,42 @@ use yii\base\Component;
 use yii\base\NotSupportedException;
 use yii\helpers\Inflector;
 use yii\helpers\StringHelper;
-use Yii;
 
 /**
- * BaseClient is a base pay Client class.
+ * 支付客户端基类
  *
  * @see ClientInterface
  *
- * @property string $id Service id.
- * @property string $name Service name.
- * @property string $title Service title.
+ * @property string $id 客户端编号
+ * @property string $name 客户端名称
+ * @property string $title 客户端标题
+ * @property string $payId 支付唯一编码
+ * 
+ * @author 尖刀 <a761208@gmail.com>
  */
 abstract class BaseClient extends Component implements ClientInterface
 {
     /**
-     * @var string pay service id.
+     * @var string 支付客户端编号
      * cod weixin alipay
      */
     private $_id;
     /**
-     * @var string pay service name.
-     * This value may be used in database records, CSS files and so on.
+     * @var string 支付客户端名称，用来标识CSS等
      */
     private $_name;
     /**
-     * @var string pay service title to display in views.
+     * @var string 支付客户端标题，显示到页面
      * 货到付款 微信支付 支付宝支付
      */
     private $_title;
     /**
-     * @var array view options in format: optionName => optionValue
+     * @var string 支付唯一编码
      */
-    private $_viewOptions;
+    private $_pay_id;
 
     /**
-     * @param string $id service id.
+     * @param string $id 客户端编号
      */
     public function setId($id)
     {
@@ -47,19 +48,18 @@ abstract class BaseClient extends Component implements ClientInterface
     }
 
     /**
-     * @return string service id
+     * @return string 客户端编号
      */
     public function getId()
     {
         if (empty($this->_id)) {
             $this->_id = $this->getName();
         }
-
         return $this->_id;
     }
 
     /**
-     * @param string $name service name.
+     * @param string $name 客户端名称
      */
     public function setName($name)
     {
@@ -67,19 +67,18 @@ abstract class BaseClient extends Component implements ClientInterface
     }
 
     /**
-     * @return string service name.
+     * @return string 客户端名称
      */
     public function getName()
     {
         if ($this->_name === null) {
             $this->_name = $this->defaultName();
         }
-
         return $this->_name;
     }
 
     /**
-     * @param string $title service title.
+     * @param string $title 客户端标题
      */
     public function setTitle($title)
     {
@@ -87,40 +86,19 @@ abstract class BaseClient extends Component implements ClientInterface
     }
 
     /**
-     * @return string service title.
+     * @return string 客户端标题
      */
     public function getTitle()
     {
         if ($this->_title === null) {
             $this->_title = $this->defaultTitle();
         }
-
         return $this->_title;
     }
 
     /**
-     * @param array $viewOptions view options in format: optionName => optionValue
-     */
-    public function setViewOptions($viewOptions)
-    {
-        $this->_viewOptions = $viewOptions;
-    }
-
-    /**
-     * @return array view options in format: optionName => optionValue
-     */
-    public function getViewOptions()
-    {
-        if ($this->_viewOptions === null) {
-            $this->_viewOptions = $this->defaultViewOptions();
-        }
-
-        return $this->_viewOptions;
-    }
-
-    /**
-     * Generates service name.
-     * @return string service name.
+     * 生成默认的客户端名称
+     * @return string 客户端名称
      */
     protected function defaultName()
     {
@@ -128,26 +106,31 @@ abstract class BaseClient extends Component implements ClientInterface
     }
 
     /**
-     * Generates service title.
-     * @return string service title.
+     * 生成默认的客户端标题
+     * @return string 客户端标题
      */
     protected function defaultTitle()
     {
         return StringHelper::basename(get_class($this));
     }
-
+    
     /**
-     * Returns the default [[viewOptions]] value.
-     * Particular client may override this method in order to provide specific default view options.
-     * @return array list of default [[viewOptions]]
+     * {@inheritDoc}
+     * @see \a76\pay\ClientInterface::setPayId()
      */
-    protected function defaultViewOptions()
-    {
-        return [];
+    public function setPayId($pay_id) {
+        $this->_pay_id = $pay_id;
     }
     
     /**
-     * 初始化支付：显示支付页面
+     * 返回支付编号
+     * @return string
+     */
+    protected function getPayId() {
+        return $this->_pay_id;
+    }
+    
+    /**
      * {@inheritDoc}
      * @see \a76\pay\ClientInterface::initPay()
      */
@@ -156,11 +139,10 @@ abstract class BaseClient extends Component implements ClientInterface
     }
     
     /**
-     * 返回支付结果
      * {@inheritDoc}
      * @see \a76\pay\ClientInterface::getPayResult()
      */
-    public function getPayResult($params) {
+    public function getPayResult() {
         throw new NotSupportedException('Method "' . get_class($this) . '::' . __FUNCTION__ . '" not implemented.');
     }
 

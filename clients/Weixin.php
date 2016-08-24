@@ -5,7 +5,8 @@ use a76\pay\BaseClient;
 use Yii;
 
 /**
- * 微信扫码
+ * 微信扫码支付
+ * @author 尖刀 <a761208@gmail.com>
  */
 class Weixin extends BaseClient
 {
@@ -14,6 +15,7 @@ class Weixin extends BaseClient
     public $mch_id;
     public $api_key;
     public $notify_url;
+    public $qr_url;
     
     /**
      * @inheritdoc
@@ -40,7 +42,6 @@ class Weixin extends BaseClient
     }
     
     /**
-     * 初始化支付：货到付款直接返回支付检查页面
      * {@inheritDoc}
      * @see \a76\pay\BaseClient::initPay()
      */
@@ -51,19 +52,19 @@ class Weixin extends BaseClient
         $view = Yii::$app->getView();
         $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $this->id . '.php';
         return $view->renderFile($viewFile, [
+            'client'=>$this,
             'params'=>$params,
             'prepay'=>$prepay,
         ]);
     }
     
     /**
-     * 返回支付结果
      * {@inheritDoc}
      * @see \a76\pay\BaseClient::getPayResult()
      */
-    public function getPayResult($params) {
+    public function getPayResult() {
         return [
-            'pay_result'=>Yii::$app->cache->get('pay_' . $params['id']),
+            'pay_result'=>Yii::$app->cache->get($this->getPayId()),
         ];
     }
     

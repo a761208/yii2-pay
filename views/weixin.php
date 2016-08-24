@@ -4,7 +4,10 @@ use yii\helpers\Url;
 use yii\web\YiiAsset;
 
 /* @var $this \yii\web\View */
+/* @var $client \a76\pay\clients\Weixin */
 /* @var $params array 支付参数 */
+/* @var $prepay array 微信预支付结果 */
+/* @author 尖刀 <a761208@gmail.com> */
 
 YiiAsset::register($this);
 
@@ -44,7 +47,7 @@ $params['action'] = 'check_pay_result';
 
 <body>
 <?php $this->beginBody() ?>
-<div id="qr"><?php echo Html::img(['/site/qr', 'content'=>$prepay['code_url']]);?></div>
+<div id="qr"><?php echo Html::img(str_replace('{$content}', $prepay['code_url'], $client->qr_url));?></div>
 <?php $this->endBody() ?>
 </body>
 </html>

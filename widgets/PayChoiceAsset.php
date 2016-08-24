@@ -4,7 +4,8 @@ namespace a76\pay\widgets;
 use yii\web\AssetBundle;
 
 /**
- * PayChoiceAsset is an asset bundle for [[PayChoice]] widget.
+ * 支付组件使用到的资源
+ * @author 尖刀 <a761208@gmail.com>
  */
 class PayChoiceAsset extends AssetBundle
 {

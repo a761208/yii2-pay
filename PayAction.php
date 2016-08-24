@@ -2,14 +2,11 @@
 namespace a76\pay;
 
 use yii\base\Action;
-use yii\base\NotSupportedException;
-use yii\helpers\Url;
-use yii\web\Response;
 use yii\web\NotFoundHttpException;
 use Yii;
 
 /**
- * PayAction performs pay via different pay clients.
+ * 支付页面显示及支付结果查询
  *
  * Usage:
  *
@@ -27,26 +24,29 @@ use Yii;
  * }
  * ```
  *
- * Usually pay via external services is performed inside the popup window.
- * This action handles the redirection and closing of popup window correctly.
+ * 一般支付页面会在弹出窗口中进行支付操作
+ * 此Action负责显示弹出窗口并查询支付状态
+ * 支付成功后关闭弹出窗口并通知调用者的回调方法
  *
- * @see Collection
+ * @see \a76\pay\Collection
  * @see \a76\pay\widgets\PayChoice
+ * 
+ * @author 尖刀 <a761208@gmail.com>
  */
 class PayAction extends Action
 {
     /**
-     * @var string name of the pay client collection application component.
-     * It should point to [[Collection]] instance.
+     * @var string Config中设置的组件名称
      */
     public $clientCollection = 'payClientCollection';
     /**
-     * @var string name of the GET param, which is used to passed pay client id to this action.
+     * @var string 判断支付类型的GET字段
      */
     public $clientIdGetParamName = 'payclient';
 
     /**
-     * Runs the action.
+     * @throws NotFoundHttpException
+     * @return string
      */
     public function run()
     {
@@ -59,21 +59,12 @@ class PayAction extends Action
             }
             $client = $collection->getClient($clientId);
             if (Yii::$app->request->get('action') == 'check_pay_result') {
-                return array_merge(['result'=>'success'], $client->getPayResult(Yii::$app->request->get()));
+                $client->setPayId('pay_' . Yii::$app->request->get('id'));
+                return array_merge(['result'=>'success'], $client->getPayResult());
             }
             return $client->initPay(Yii::$app->request->get());
         } else {
             throw new NotFoundHttpException();
         }
-    }
-
-    /**
-     * @param \a76\pay\ClientInterface $client pay client instance.
-     * @return Response response instance.
-     * @throws \yii\base\NotSupportedException on invalid client.
-     */
-    protected function initPay($client, $params)
-    {
-        echo $client->initPay($params);
     }
 }

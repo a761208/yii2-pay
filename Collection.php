@@ -5,9 +5,9 @@ use yii\base\Component;
 use Yii;
 
 /**
- * Collection is a storage for all pay clients.
+ * 保存所有支付客户端
  *
- * Example application configuration:
+ * 配置示例:
  *
  * ```php
  * 'components' => [
@@ -16,6 +16,12 @@ use Yii;
  *         'clients' => [
  *             'weixin' => [
  *                 'class' => 'a76\pay\clients\Weixin',
+ *                 'app_id'     => 'xxxxxxxxxxxxxxxxxx', // 微信AppId
+ *                 'app_secret' => 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', // 微信AppSecret
+ *                 'mch_id'     => 'xxxxxxxxxx', // 微信商户编号
+ *                 'api_key'    => 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', // 微信商户API密钥
+ *                 'notify_url' => '/site/pay-notify.html', // 微信支付回调地址
+ *                 'qr_url'     => '/site/qr.html?content={$content}', // 内容生成二维码地址，其中{$content}将被替换为实际二维码内容
  *             ],
  *             'alipay' => [
  *                 'class' => 'a76\pay\clients\Alipay',
@@ -28,17 +34,17 @@ use Yii;
  * ]
  * ```
  *
- * @author A761208 <a761208@gmail.com>
+ * @author 尖刀 <a761208@gmail.com>
  */
 class Collection extends Component
 {
     /**
-     * @var array list of pay client with their configuration in format: 'clientId' => [...]
+     * @var array 支付客户端列表：'weixin'=>[...], 'alipay'=>[...]
      */
     private $_clients = [];
 
     /**
-     * @param array $clients list of pay clients
+     * @param array $clients 支付客户端列表
      */
     public function setClients(array $clients)
     {
@@ -46,8 +52,8 @@ class Collection extends Component
     }
 
     /**
-     * @param boolean 是否允许货到付款
-     * @return ClientInterface[] list of pay clients.
+     * @param boolean $canCOD = true 是否允许货到付款
+     * @return ClientInterface[] 支付客户端列表
      */
     public function getClients($canCOD = true)
     {
@@ -64,8 +70,8 @@ class Collection extends Component
     }
 
     /**
-     * @param string $id service id.
-     * @return ClientInterface pay client instance.
+     * @param string $id 客户端编号
+     * @return ClientInterface 支付客户端列表
      */
     public function getClient($id)
     {
@@ -75,7 +81,7 @@ class Collection extends Component
             ]);
         }
         if (!array_key_exists($id, $this->_clients)) {
-            throw new \Exception('Unknown pay client: ' . $id . '.');
+            throw new \Exception('无法识别支付类型：' . $id . '.');
         }
         if (!is_object($this->_clients[$id])) {
             $this->_clients[$id] = $this->createClient($id, $this->_clients[$id]);
@@ -84,9 +90,9 @@ class Collection extends Component
     }
 
     /**
-     * Checks if client exists in the hub.
-     * @param string $id client id.
-     * @return boolean whether client exist.
+     * 判断是否存在客户端
+     * @param string $id 客户端编号
+     * @return boolean
      */
     public function hasClient($id)
     {
@@ -97,10 +103,10 @@ class Collection extends Component
     }
 
     /**
-     * Creates pay client instance from its array configuration.
-     * @param string $id pay client id.
-     * @param array $config pay client instance configuration.
-     * @return ClientInterface pay client instance.
+     * 根据设置生成支付客户端实例
+     * @param string $id 客户端编号
+     * @param array $config 设置
+     * @return ClientInterface 支付客户端
      */
     protected function createClient($id, $config)
     {
