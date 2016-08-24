@@ -61,7 +61,7 @@ class PayAction extends Action
             if (Yii::$app->request->get('action') == 'check_pay_result') {
                 return array_merge(['result'=>'success'], $client->getPayResult(Yii::$app->request->get()));
             }
-            return $this->initPay($client, Yii::$app->request->get());
+            return $client->initPay(Yii::$app->request->get());
         } else {
             throw new NotFoundHttpException();
         }
