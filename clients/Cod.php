@@ -31,7 +31,7 @@ class Cod extends BaseClient
      * @see \a76\pay\BaseClient::initPay()
      */
     public function initPay($params) {
-        Yii::$app->cache->set('pay_' . $params['id'], 'success'); // 货到付款直接设置支付成功
+        $this->notifyPay('');
         /* @var $view \yii\web\View */
         $view = Yii::$app->getView();
         $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $this->id . '.php';
@@ -42,11 +42,19 @@ class Cod extends BaseClient
     
     /**
      * {@inheritDoc}
+     * @see \a76\pay\BaseClient::notifyPay()
+     */
+    public function notifyPay($raw) {
+        Yii::$app->cache->set('pay_result_' . $params['id'], 'success'); // 货到付款直接设置支付成功
+    }
+    
+    /**
+     * {@inheritDoc}
      * @see \a76\pay\BaseClient::getPayResult()
      */
     public function getPayResult() {
         return [
-            'pay_result'=>Yii::$app->cache->get($this->getPayId()),
+            'pay_result'=>Yii::$app->cache->get('pay_result_' . $this->getPayId()),
             'is_cod'=>true
         ];
     }

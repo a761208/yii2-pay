@@ -2,6 +2,7 @@
 namespace a76\pay\clients;
 
 use a76\pay\BaseClient;
+use yii\base\InvalidConfigException;
 use Yii;
 
 /**
@@ -47,7 +48,7 @@ class Weixin extends BaseClient
      */
     public function initPay($params) {
         $prepay = $this->unifiedorder($params);
-        Yii::$app->cache->set('pay_' . $params['id'], 'waiting');
+        Yii::$app->cache->set('pay_result_' . $params['id'], 'waiting');
         /* @var $view \yii\web\View */
         $view = Yii::$app->getView();
         $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $this->id . '.php';
@@ -60,11 +61,38 @@ class Weixin extends BaseClient
     
     /**
      * {@inheritDoc}
+     * @see \a76\pay\BaseClient::notifyPay()
+     */
+    public function notifyPay($raw) {
+        $xml = simplexml_load_string($raw, 'SimpleXMLElement', LIBXML_NOCDATA);
+        $xml = (array) $xml;
+        if ($xml['return_code'] != 'SUCCESS') {
+            echo '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
+            return;
+        }
+        if ($xml['result_code'] != 'SUCCESS') {
+            // 支付失败
+            echo '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
+        }
+        $sign = $xml['sign'];
+        unset($xml['sign']);
+        if (Weixin::makeSign($xml, $this->api_key) != $sign) {
+            echo '<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[签名失败]]></return_msg></xml>';
+            return;
+        }
+        $this->setPayId($xml['out_trade_no']);
+        Yii::$app->cache->set('pay_result_' . $xml['out_trade_no'], 'success');
+        Yii::$app->cache->set('pay_remark_' . $xml['out_trade_no'], $raw);
+    }
+    
+    /**
+     * {@inheritDoc}
      * @see \a76\pay\BaseClient::getPayResult()
      */
     public function getPayResult() {
         return [
-            'pay_result'=>Yii::$app->cache->get($this->getPayId()),
+            'pay_result'=>Yii::$app->cache->get('pay_result_' . $this->getPayId()),
+            'pay_remark'=>Yii::$app->cache->get('pay_remark_' . $this->getPayId()),
         ];
     }
     

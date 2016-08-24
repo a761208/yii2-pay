@@ -140,6 +140,14 @@ abstract class BaseClient extends Component implements ClientInterface
     
     /**
      * {@inheritDoc}
+     * @see \a76\pay\ClientInterface::notifyPay()
+     */
+    public function notifyPay($raw) {
+        throw new NotSupportedException('Method "' . get_class($this) . '::' . __FUNCTION__ . '" not implemented.');
+    }
+    
+    /**
+     * {@inheritDoc}
      * @see \a76\pay\ClientInterface::getPayResult()
      */
     public function getPayResult() {

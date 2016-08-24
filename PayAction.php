@@ -59,7 +59,7 @@ class PayAction extends Action
             }
             $client = $collection->getClient($clientId);
             if (Yii::$app->request->get('action') == 'check_pay_result') {
-                $client->setPayId('pay_' . Yii::$app->request->get('id'));
+                $client->setPayId(Yii::$app->request->get('id'));
                 return array_merge(['result'=>'success'], $client->getPayResult());
             }
             return $client->initPay(Yii::$app->request->get());

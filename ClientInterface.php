@@ -51,6 +51,12 @@ interface ClientInterface
     public function initPay($params);
     
     /**
+     * 支付结果处理
+     * @param mixed $raw
+     */
+    public function notifyPay($raw);
+    
+    /**
      * 返回支付结果
      * @return array ['pay_result'=>'success|failure', 'is_cod'=>true|false]
      */
