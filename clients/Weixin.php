@@ -81,6 +81,7 @@ class Weixin extends BaseClient
         }
         $this->setPayId($xml['out_trade_no']);
         Yii::$app->cache->set('pay_result_' . $xml['out_trade_no'], 'success');
+        Yii::$app->cache->set('pay_money_' . $xml['out_trade_no'], $xml['cash_fee'] / 100);
         Yii::$app->cache->set('pay_remark_' . $xml['out_trade_no'], $raw);
     }
     
@@ -91,6 +92,7 @@ class Weixin extends BaseClient
     public function getPayResult() {
         return [
             'pay_result'=>Yii::$app->cache->get('pay_result_' . $this->getPayId()),
+            'pay_money'=>Yii::$app->cache->get('pay_money_' . $this->getPayId()),
             'pay_remark'=>Yii::$app->cache->get('pay_remark_' . $this->getPayId()),
         ];
     }

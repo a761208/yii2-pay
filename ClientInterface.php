@@ -63,7 +63,7 @@ interface ClientInterface
     
     /**
      * 返回支付结果
-     * @return array ['pay_result'=>'success|failure', 'is_cod'=>true|false]
+     * @return array ['pay_result'=>'success|failure', 'is_cod'=>true|false, 'pay_money'=>123]
      */
     public function getPayResult();
 }
