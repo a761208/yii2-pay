@@ -31,6 +31,7 @@ class Cod extends BaseClient
      * @see \a76\pay\BaseClient::initPay()
      */
     public function initPay($params) {
+        $this->setPayId($params['id']);
         $this->notifyPay('');
         /* @var $view \yii\web\View */
         $view = Yii::$app->getView();
@@ -45,7 +46,7 @@ class Cod extends BaseClient
      * @see \a76\pay\BaseClient::notifyPay()
      */
     public function notifyPay($raw) {
-        Yii::$app->cache->set('pay_result_' . $params['id'], 'success'); // 货到付款直接设置支付成功
+        Yii::$app->cache->set('pay_result_' . $this->getPayId(), 'success'); // 货到付款直接设置支付成功
     }
     
     /**
