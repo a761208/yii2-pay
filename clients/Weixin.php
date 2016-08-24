@@ -2,7 +2,6 @@
 namespace a76\pay\clients;
 
 use a76\pay\BaseClient;
-use yii\base\InvalidConfigException;
 use Yii;
 
 /**
