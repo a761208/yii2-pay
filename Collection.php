@@ -55,7 +55,7 @@ class Collection extends Component
      * @param boolean $canCOD = true 是否允许货到付款
      * @return ClientInterface[] 支付客户端列表
      */
-    public function getClients($canCOD = true)
+    public function getClients($canCOD = false)
     {
         $clients = [];
         if ($canCOD) {

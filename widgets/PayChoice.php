@@ -66,7 +66,7 @@ class PayChoice extends Widget
     /**
      * @var boolean 是否允许货到付款支付方式
      */
-    public $canCOD = true;
+    public $canCOD = false;
     /**
      * @var array 默认支付目录
      */
