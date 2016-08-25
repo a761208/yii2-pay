@@ -8,6 +8,7 @@ use yii\helpers\Html;
 use yii\helpers\Json;
 use yii\helpers\Url;
 use Yii;
+use a76\pay\PayNotifyAction;
 
 /**
  * 显示支付链接，点击链接弹出支付小窗口
@@ -29,11 +30,13 @@ use Yii;
  *     };
  * }
  * // 支付回调，此方法会在用户支付成功后调用
- * // @param boolean pay_success 是否支付成功
- * // @param boolean is_cod 是否为货到付款
- * function pay_callback(pay_success, is_cod) {
- *     console.log("支付结果 boolean：" + pay_success);
- *     console.log("货到付款 boolean：" + is_cod);
+ * // @param json 支付结果
+ * // json['pay_result'] = 'success|failure' 是否支付成功
+ * // json['is_cod'] true|false 是否为货到付款
+ * // json[...] PayNotifyAction callback 中设置的其它信息
+ * function pay_callback(json) {
+ *     console.log("支付结果：");
+ *     console.log(result);
  * }
  * </script>
  * <?php a76\pay\widgets\PayChoice::end(); ?>

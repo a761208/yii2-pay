@@ -25,9 +25,8 @@ $params['action'] = 'check_pay_result';
         $.getJSON("<?php echo Url::current(['action'=>'check_pay_result']);?>", <?php echo json_encode($params);?>, function(json) {
             if (json['result'] == 'success') { // 返回结果正常
                 if (json['pay_result'] == 'success') { // 支付成功
-                    var is_cod = json['is_cod']; // 是否为货到付款
                     if (window.opener && !window.opener.closed) {
-                        window.opener.pay_callback(true, is_cod);
+                        window.opener.pay_callback(json);
                         window.opener.focus();
                         window.close();
                     } else {
