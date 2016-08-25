@@ -62,6 +62,12 @@ interface ClientInterface
     public function notifyPay($raw);
     
     /**
+     * 设置支付结果返回附加内容
+     * @param array $json
+     */
+    public function setPayResult($json);
+    
+    /**
      * 返回支付结果
      * @return array ['pay_result'=>'success|failure', 'is_cod'=>true|false, 'pay_money'=>123]
      */

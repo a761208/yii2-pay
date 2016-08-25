@@ -5,6 +5,7 @@ use yii\base\Component;
 use yii\base\NotSupportedException;
 use yii\helpers\Inflector;
 use yii\helpers\StringHelper;
+use Yii;
 
 /**
  * 支付客户端基类
@@ -148,10 +149,22 @@ abstract class BaseClient extends Component implements ClientInterface
     
     /**
      * {@inheritDoc}
+     * @see \a76\pay\ClientInterface::setPayResult()
+     */
+    public function setPayResult($json) {
+        Yii::$app->cache->set('pay_extra_result_' . $this->getPayId(), json_encode($json));
+    }
+    
+    /**
+     * {@inheritDoc}
      * @see \a76\pay\ClientInterface::getPayResult()
      */
     public function getPayResult() {
-        throw new NotSupportedException('Method "' . get_class($this) . '::' . __FUNCTION__ . '" not implemented.');
+        $json = Yii::$app->cache->get('pay_extra_result_' . $this->getPayId());
+        if (empty($json)) {
+            return [];
+        }
+        return json_decode($json, true);
     }
 
     /**

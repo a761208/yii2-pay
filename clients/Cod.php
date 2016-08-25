@@ -54,9 +54,9 @@ class Cod extends BaseClient
      * @see \a76\pay\BaseClient::getPayResult()
      */
     public function getPayResult() {
-        return [
+        return array_merge([
             'pay_result'=>Yii::$app->cache->get('pay_result_' . $this->getPayId()),
             'is_cod'=>true
-        ];
+        ], parent::getPayResult());
     }
 }

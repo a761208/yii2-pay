@@ -90,11 +90,11 @@ class Weixin extends BaseClient
      * @see \a76\pay\BaseClient::getPayResult()
      */
     public function getPayResult() {
-        return [
+        return array_merge([
             'pay_result'=>Yii::$app->cache->get('pay_result_' . $this->getPayId()),
             'pay_money'=>Yii::$app->cache->get('pay_money_' . $this->getPayId()),
             'pay_remark'=>Yii::$app->cache->get('pay_remark_' . $this->getPayId()),
-        ];
+        ], parent::getPayResult());
     }
     
     /**
