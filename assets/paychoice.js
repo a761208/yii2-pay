@@ -66,3 +66,27 @@ jQuery(function($) {
         });
     };
 });
+/**
+ * 检查支付结果并回调
+ * @param url string 检查结果的地址
+ * @param params 提交参数
+ * @returns
+ */
+function checkPayResult(url, params)
+{
+    $.getJSON(url, params, function(json) {
+        if (json['result'] == 'success') { // 返回结果正常
+            if (json['pay_result'] == 'success') { // 支付成功
+                if (window.opener && !window.opener.closed) {
+                    window.opener.pay_callback(json);
+                    window.opener.focus();
+                    window.close();
+                } else {
+                    window.location = url;
+                }
+                return true;
+            }
+        }
+        window.setTimeout(function() {checkPayResult(url, params);}, 1000);
+    });
+}

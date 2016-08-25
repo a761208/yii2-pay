@@ -1,15 +1,12 @@
 <?php
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\web\YiiAsset;
 
 /* @var $this \yii\web\View */
 /* @var $client \a76\pay\clients\Weixin */
 /* @var $params array 支付参数 */
 /* @var $prepay array 微信预支付结果 */
 /* @author 尖刀 <a761208@gmail.com> */
-
-YiiAsset::register($this);
 
 $params['action'] = 'check_pay_result';
 ?>
@@ -22,25 +19,7 @@ $params['action'] = 'check_pay_result';
     <?= Html::csrfMetaTags() ?>
     <?php $this->head() ?>
     <script>
-    function checkPayResult()
-    {
-        $.getJSON("<?php echo Url::current(['action'=>'check_pay_result']);?>", <?php echo json_encode($params);?>, function(json) {
-            if (json['result'] == 'success') { // 返回结果正常
-                if (json['pay_result'] == 'success') { // 支付成功
-                    if (window.opener && !window.opener.closed) {
-                        window.opener.pay_callback(json);
-                        window.opener.focus();
-                        window.close();
-                    } else {
-                        window.location = url;
-                    }
-                    return true;
-                }
-            }
-            window.setTimeout(function() {checkPayResult();}, 1000);
-        });
-    }
-    <?php $this->registerJs('checkPayResult();');?>
+    <?php $this->registerJs('checkPayResult("' . Url::current(['action'=>'check_pay_result']) . '", ' . json_encode($params) . ');');?>
     </script>
 </head>
 
