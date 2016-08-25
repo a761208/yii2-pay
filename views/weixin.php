@@ -1,4 +1,5 @@
 <?php
+use a76\pay\widgets\PayChoiceAsset;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
@@ -7,6 +8,8 @@ use yii\helpers\Url;
 /* @var $params array 支付参数 */
 /* @var $prepay array 微信预支付结果 */
 /* @author 尖刀 <a761208@gmail.com> */
+
+PayChoiceAsset::register($this);
 
 $params['action'] = 'check_pay_result';
 ?>

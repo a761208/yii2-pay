@@ -1,10 +1,13 @@
 <?php
+use a76\pay\widgets\PayChoiceAsset;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
 /* @var $this \yii\web\View */
 /* @var $params array 支付参数 */
 /* @author 尖刀 <a761208@gmail.com> */
+
+PayChoiceAsset::register($this);
 
 $params['action'] = 'check_pay_result';
 ?>
@@ -17,7 +20,7 @@ $params['action'] = 'check_pay_result';
     <?= Html::csrfMetaTags() ?>
     <?php $this->head() ?>
     <script>
-    <?php $this->registerJs('checkPayResult();');?>
+    <?php $this->registerJs('checkPayResult("' . Url::current(['action'=>'check_pay_result']) . '", ' . json_encode($params) . ');');?>
     </script>
 </head>
 
