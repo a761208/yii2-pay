@@ -25,10 +25,12 @@ jQuery(function($) {
             $container.find(options.triggerSelector).on('click', function(e) {
                 e.preventDefault();
 
+                // TODO:需要考虑不支持弹出窗口的情况，比如APP中的WebView
+
                 var payChoicePopup = $container.data('payChoicePopup');
 
                 if (payChoicePopup) {
-                	payChoicePopup.close();
+                    payChoicePopup.close();
                 }
 
                 var url = this.href;
@@ -75,8 +77,8 @@ jQuery(function($) {
 function checkPayResult(url, params)
 {
     $.getJSON(url, params, function(json) {
-        if (json['result'] == 'success') { // 返回结果正常
-            if (json['pay_result'] == 'success') { // 支付成功
+        if (json['result'] === 'success') { // 返回结果正常
+            if (json['pay_result'] === 'success') { // 支付成功
                 if (window.opener && !window.opener.closed) {
                     window.opener.pay_callback(json);
                     window.opener.focus();

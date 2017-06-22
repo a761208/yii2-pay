@@ -3,6 +3,7 @@ namespace a76\pay;
 
 use yii\base\Component;
 use yii\base\NotSupportedException;
+use yii\db\Query;
 use yii\helpers\Inflector;
 use yii\helpers\StringHelper;
 use Yii;
@@ -21,6 +22,10 @@ use Yii;
  */
 abstract class BaseClient extends Component implements ClientInterface
 {
+    /**
+     * @var string Config中设置的组件名称
+     */
+    public $clientCollection = 'payClientCollection';
     /**
      * @var string 支付客户端编号
      * cod weixin alipay
@@ -119,7 +124,8 @@ abstract class BaseClient extends Component implements ClientInterface
      * {@inheritDoc}
      * @see \a76\pay\ClientInterface::setPayId()
      */
-    public function setPayId($pay_id) {
+    public function setPayId($pay_id)
+    {
         $this->_pay_id = $pay_id;
     }
     
@@ -127,7 +133,8 @@ abstract class BaseClient extends Component implements ClientInterface
      * {@inheritDoc}
      * @see \a76\pay\ClientInterface::getPayId()
      */
-    public function getPayId() {
+    public function getPayId()
+    {
         return $this->_pay_id;
     }
     
@@ -135,7 +142,8 @@ abstract class BaseClient extends Component implements ClientInterface
      * {@inheritDoc}
      * @see \a76\pay\ClientInterface::initPay()
      */
-    public function initPay($params) {
+    public function initPay($params)
+    {
         throw new NotSupportedException('Method "' . get_class($this) . '::' . __FUNCTION__ . '" not implemented.');
     }
     
@@ -143,28 +151,63 @@ abstract class BaseClient extends Component implements ClientInterface
      * {@inheritDoc}
      * @see \a76\pay\ClientInterface::notifyPay()
      */
-    public function notifyPay($raw) {
+    public function notifyPay($raw)
+    {
         throw new NotSupportedException('Method "' . get_class($this) . '::' . __FUNCTION__ . '" not implemented.');
     }
-    
+
     /**
      * {@inheritDoc}
      * @see \a76\pay\ClientInterface::setPayResult()
      */
-    public function setPayResult($json) {
-        Yii::$app->cache->set('pay_extra_result_' . $this->getPayId(), json_encode($json));
+    public function setPayResult($json)
+    {
+        $this->setData('pay_extra_result_' . $this->getPayId(), json_encode($json));
     }
     
     /**
      * {@inheritDoc}
      * @see \a76\pay\ClientInterface::getPayResult()
      */
-    public function getPayResult() {
-        $json = Yii::$app->cache->get('pay_extra_result_' . $this->getPayId());
-        if (empty($json)) {
-            return [];
+    public function getPayResult()
+    {
+        return $this->getData('pay_extra_result_' . $this->getPayId());
+    }
+
+    /**
+     * 持久化保存数据
+     * @param string $k 唯一键
+     * @param $v
+     */
+    protected function setData($k, $v)
+    {
+        /* @var $payClientCollection Collection */
+        $payClientCollection = Yii::$app->get($this->clientCollection);
+        if ($this->getData($k) === false) {
+            $payClientCollection->db->createCommand()->insert($payClientCollection->paymentTable, ['k'=>$k, 'v'=>$v])->execute();
+        } else {
+            $payClientCollection->db->createCommand()->update($payClientCollection->paymentTable, ['v'=>$v,], ['k'=>$k])->execute();
         }
-        return json_decode($json, true);
+    }
+
+    /**
+     * 获取之前保存的值
+     * @param $k
+     * @return string|false
+     */
+    protected function getData($k)
+    {
+        /* @var $payClientCollection Collection */
+        $payClientCollection = Yii::$app->get($this->clientCollection);
+        $query = new Query;
+        $query->select(['v'])
+            ->from($payClientCollection->paymentTable)
+            ->where(['k' => $k]);
+        $data = $query->createCommand($payClientCollection->db)->queryOne();
+        if (empty($data)) {
+            return false;
+        }
+        return $data['v'];
     }
 
     /**
@@ -174,9 +217,11 @@ abstract class BaseClient extends Component implements ClientInterface
      * @param string $url  url
      * @param bool $useCert 是否需要证书，默认不需要
      * @param int $second   url执行超时时间，默认30s
-     * @throws WxPayException
+     * @throws \Exception
+     * @return string
      */
-    protected function postXmlCurl($xml, $url, $useCert = false, $second = 30) {
+    protected function postXmlCurl($xml, $url, $useCert = false, $second = 30)
+    {
         $ch = curl_init();
         // 设置超时
         curl_setopt($ch, CURLOPT_TIMEOUT, $second);

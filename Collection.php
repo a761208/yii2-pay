@@ -3,6 +3,8 @@ namespace a76\pay;
 
 use yii\base\Component;
 use Yii;
+use yii\db\Connection;
+use yii\di\Instance;
 
 /**
  * 保存所有支付客户端
@@ -39,9 +41,35 @@ use Yii;
 class Collection extends Component
 {
     /**
-     * @var array 支付客户端列表：'weixin'=>[...], 'alipay'=>[...]
+     * @var Connection|array|string 记录支付状态的表所在的数据库
+     */
+    public $db = 'db';
+    /**
+     * @var string 记录支付状态的表
+     * 表需要提前创建好
+     * ```php
+     * CREATE TABLE payment (
+     *     k varchar(128) NOT NULL PRIMARY KEY,
+     *     v text
+     * );
+     * ```
+     */
+    public $paymentTable = '{{%payment}}';
+
+    /**
+     * @var array 支付客户端列表：['weixin'=>[...], 'alipay'=>[...]]
      */
     private $_clients = [];
+
+    /**
+     * 初始化支付组件，此方法将根据配置生成数据库组件
+     * @inheritdoc
+     */
+    public function init()
+    {
+        parent::init();
+        $this->db = Instance::ensure($this->db, Connection::className());
+    }
 
     /**
      * @param array $clients 支付客户端列表
@@ -71,6 +99,7 @@ class Collection extends Component
 
     /**
      * @param string $id 客户端编号
+     * @throws \Exception
      * @return ClientInterface 支付客户端列表
      */
     public function getClient($id)
@@ -106,7 +135,7 @@ class Collection extends Component
      * 根据设置生成支付客户端实例
      * @param string $id 客户端编号
      * @param array $config 设置
-     * @return ClientInterface 支付客户端
+     * @return ClientInterface|object
      */
     protected function createClient($id, $config)
     {

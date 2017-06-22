@@ -50,7 +50,7 @@ interface ClientInterface
     
     /**
      * 初始化支付：显示支付页面等
-     * @param array 支付参数
+     * @param array $params 支付参数
      * @return string 页面内容
      */
     public function initPay($params);

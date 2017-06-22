@@ -1,9 +1,8 @@
 <?php
 namespace a76\pay;
 
-use a76\pay\clients\Weixin;
 use yii\base\Action;
-use yii\helpers\Url;
+use yii\base\InvalidConfigException;
 use yii\web\NotFoundHttpException;
 use Yii;
 

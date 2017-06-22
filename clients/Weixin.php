@@ -45,9 +45,10 @@ class Weixin extends BaseClient
      * {@inheritDoc}
      * @see \a76\pay\BaseClient::initPay()
      */
-    public function initPay($params) {
+    public function initPay($params)
+    {
         $prepay = $this->unifiedorder($params);
-        Yii::$app->cache->set('pay_result_' . $params['id'], 'waiting');
+        $this->setData('pay_result_' . $params['id'], 'waiting');
         /* @var $view \yii\web\View */
         $view = Yii::$app->getView();
         $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $this->id . '.php';
@@ -62,7 +63,8 @@ class Weixin extends BaseClient
      * {@inheritDoc}
      * @see \a76\pay\BaseClient::notifyPay()
      */
-    public function notifyPay($raw) {
+    public function notifyPay($raw)
+    {
         $xml = simplexml_load_string($raw, 'SimpleXMLElement', LIBXML_NOCDATA);
         $xml = (array) $xml;
         if ($xml['return_code'] != 'SUCCESS') {
@@ -80,20 +82,21 @@ class Weixin extends BaseClient
             return;
         }
         $this->setPayId($xml['out_trade_no']);
-        Yii::$app->cache->set('pay_result_' . $xml['out_trade_no'], 'success');
-        Yii::$app->cache->set('pay_money_' . $xml['out_trade_no'], $xml['cash_fee'] / 100);
-        Yii::$app->cache->set('pay_remark_' . $xml['out_trade_no'], $raw);
+        $this->setData('pay_result_' . $xml['out_trade_no'], 'success');
+        $this->setData('pay_money_' . $xml['out_trade_no'], $xml['cash_fee'] / 100);
+        $this->setData('pay_remark_' . $xml['out_trade_no'], $raw);
     }
     
     /**
      * {@inheritDoc}
      * @see \a76\pay\BaseClient::getPayResult()
      */
-    public function getPayResult() {
+    public function getPayResult()
+    {
         return array_merge([
-            'pay_result'=>Yii::$app->cache->get('pay_result_' . $this->getPayId()),
-            'pay_money'=>Yii::$app->cache->get('pay_money_' . $this->getPayId()),
-            'pay_remark'=>Yii::$app->cache->get('pay_remark_' . $this->getPayId()),
+            'pay_result'=>$this->getData('pay_result_' . $this->getPayId()),
+            'pay_money'=>$this->getData('pay_money_' . $this->getPayId()),
+            'pay_remark'=>$this->getData('pay_remark_' . $this->getPayId()),
         ], parent::getPayResult());
     }
     
@@ -103,7 +106,8 @@ class Weixin extends BaseClient
      * @return array prepay_id：预支付会话标识，有效期2小时；code_url：二维码内容
      * @throws \Exception
      */
-    private function unifiedorder($params) {
+    private function unifiedorder($params)
+    {
         $url = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
         $post = [];
         $post['appid'] = $this->app_id;
@@ -140,9 +144,12 @@ class Weixin extends BaseClient
     
     /**
      * 生成签名
+     * @param array $data 参数列表
+     * @param string $api_key 加密密钥
      * @return string
      */
-    public static function makeSign($data, $api_key) {
+    public static function makeSign($data, $api_key)
+    {
         ksort($data);
         $stringA = '';
         foreach ($data as $k=>$v) {

@@ -2,13 +2,12 @@
 namespace a76\pay\widgets;
 
 use a76\pay\ClientInterface;
+use Yii;
 use yii\base\InvalidConfigException;
 use yii\base\Widget;
 use yii\helpers\Html;
 use yii\helpers\Json;
 use yii\helpers\Url;
-use Yii;
-use a76\pay\PayNotifyAction;
 
 /**
  * 显示支付链接，点击链接弹出支付小窗口
@@ -30,7 +29,7 @@ use a76\pay\PayNotifyAction;
  *     };
  * }
  * // 支付回调，此方法会在用户支付成功后调用
- * // @param json 支付结果
+ * // @param object json 支付结果
  * // json['pay_result'] = 'success|failure' 是否支付成功
  * // json['is_cod'] true|false 是否为货到付款
  * // json[...] PayNotifyAction callback 中设置的其它信息
