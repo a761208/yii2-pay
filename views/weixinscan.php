@@ -4,7 +4,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 
 /* @var $this \yii\web\View */
-/* @var $client \a76\pay\clients\Weixin */
+/* @var $client \a76\pay\clients\WeixinScan */
 /* @var $params array 支付参数 */
 /* @var $prepay array 微信预支付结果 */
 /* @author 尖刀 <a761208@gmail.com> */

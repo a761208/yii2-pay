@@ -8,7 +8,7 @@ use Yii;
  * 微信扫码支付
  * @author 尖刀 <a761208@gmail.com>
  */
-class Weixin extends BaseClient
+class WeixinScan extends BaseClient
 {
     public $app_id;
     public $app_secret;
@@ -77,7 +77,7 @@ class Weixin extends BaseClient
         }
         $sign = $xml['sign'];
         unset($xml['sign']);
-        if (Weixin::makeSign($xml, $this->api_key) != $sign) {
+        if (WeixinScan::makeSign($xml, $this->api_key) != $sign) {
             echo '<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[签名失败]]></return_msg></xml>';
             return;
         }
@@ -120,7 +120,7 @@ class Weixin extends BaseClient
         $post['spbill_create_ip'] = Yii::$app->request->userIP;
         $post['notify_url'] = Yii::$app->request->hostInfo . $this->notify_url;
         $post['trade_type'] = 'NATIVE';
-        $post['sign'] = Weixin::makeSign($post, $this->api_key);
+        $post['sign'] = WeixinScan::makeSign($post, $this->api_key);
         $xml = '<xml>';
         foreach ($post as $k=>$v) {
             $xml .= '<' . $k . '>' . $v . '</' . $k . '>';
