@@ -97,7 +97,7 @@ class Weixin extends BaseClient
             'pay_result'=>$this->getData('pay_result_' . $this->getPayId()),
             'pay_money'=>$this->getData('pay_money_' . $this->getPayId()),
             'pay_remark'=>$this->getData('pay_remark_' . $this->getPayId()),
-        ], parent::getPayResult());
+        ], parent::getPayResult() !== false ? json_decode(parent::getPayResult(), true) : []);
     }
     
     /**

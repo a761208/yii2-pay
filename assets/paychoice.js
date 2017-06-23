@@ -25,45 +25,46 @@ jQuery(function($) {
             $container.find(options.triggerSelector).on('click', function(e) {
                 e.preventDefault();
 
-                // TODO:需要考虑不支持弹出窗口的情况，比如APP中的WebView
-
-                var payChoicePopup = $container.data('payChoicePopup');
-
-                if (payChoicePopup) {
-                    payChoicePopup.close();
-                }
-
                 var url = this.href;
                 var pay_params = pay_init();
                 $.each(pay_params, function(index, value) {
                     url += "&" + index + "=" + value;
                 });
-                var popupOptions = $.extend({}, options.popup); // clone
 
-                var localPopupWidth = this.getAttribute('data-popup-width');
-                if (localPopupWidth) {
-                    popupOptions.width = localPopupWidth;
-                }
-                var localPopupHeight = this.getAttribute('data-popup-height');
-                if (localPopupWidth) {
-                    popupOptions.height = localPopupHeight;
-                }
-
-                popupOptions.left = (window.screen.width - popupOptions.width) / 2;
-                popupOptions.top = (window.screen.height - popupOptions.height) / 2;
-
-                var popupFeatureParts = [];
-                for (var propName in popupOptions) {
-                    if (popupOptions.hasOwnProperty(propName)) {
-                        popupFeatureParts.push(propName + '=' + popupOptions[propName]);
+                if (options['popup'] !== false) {
+                    // 通过弹出小窗口支付
+                    var payChoicePopup = $container.data('payChoicePopup');
+                    if (payChoicePopup) {
+                        payChoicePopup.close();
                     }
+
+                    var popupOptions = $.extend({}, options.popup); // clone
+                    var localPopupWidth = this.getAttribute('data-popup-width');
+                    if (localPopupWidth) {
+                        popupOptions.width = localPopupWidth;
+                    }
+                    var localPopupHeight = this.getAttribute('data-popup-height');
+                    if (localPopupWidth) {
+                        popupOptions.height = localPopupHeight;
+                    }
+                    popupOptions.left = (window.screen.width - popupOptions.width) / 2;
+                    popupOptions.top = (window.screen.height - popupOptions.height) / 2;
+                    var popupFeatureParts = [];
+                    for (var propName in popupOptions) {
+                        if (popupOptions.hasOwnProperty(propName)) {
+                            popupFeatureParts.push(propName + '=' + popupOptions[propName]);
+                        }
+                    }
+
+                    var popupFeature = popupFeatureParts.join(',');
+                    payChoicePopup = window.open(url, 'yii_pay_choice', popupFeature);
+                    payChoicePopup.focus();
+                    $container.data('payChoicePopup', payChoicePopup);
+                } else {
+                    var iframe = '<iframe id="yii_pay_choice" src="' + url + '" style="border:none; position:absolute; left:0; top:0; width:100%; height:' + $(document).height() + 'px; background:#FFF;"></iframe>';
+                    $container.after(iframe);
+                    // 通过嵌入iframe支付
                 }
-                var popupFeature = popupFeatureParts.join(',');
-
-                payChoicePopup = window.open(url, 'yii_pay_choice', popupFeature);
-                payChoicePopup.focus();
-
-                $container.data('payChoicePopup', payChoicePopup);
             });
         });
     };
@@ -80,11 +81,13 @@ function checkPayResult(url, params)
         if (json['result'] === 'success') { // 返回结果正常
             if (json['pay_result'] === 'success') { // 支付成功
                 if (window.opener && !window.opener.closed) {
+                    // 弹出窗口
                     window.opener.pay_callback(json);
                     window.opener.focus();
                     window.close();
                 } else {
-                    window.location = url;
+                    window.parent.pay_callback(json);
+                    $(window.parent.document.getElementById('yii_pay_choice')).remove();
                 }
                 return true;
             }

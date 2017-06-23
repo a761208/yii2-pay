@@ -1,9 +1,10 @@
 <?php
 namespace a76\pay;
 
+use Yii;
 use yii\base\Action;
 use yii\web\NotFoundHttpException;
-use Yii;
+use yii\web\Response;
 
 /**
  * 支付页面显示及支付结果查询
@@ -24,9 +25,8 @@ use Yii;
  * }
  * ```
  *
- * 一般支付页面会在弹出窗口中进行支付操作
- * 此Action负责显示弹出窗口并查询支付状态
- * 支付成功后关闭弹出窗口并通知调用者的回调方法
+ * 此Action负责显示支付界面并查询支付状态
+ * 支付成功后通知调用者的回调方法
  *
  * @see \a76\pay\Collection
  * @see \a76\pay\widgets\PayChoice
@@ -59,6 +59,7 @@ class PayAction extends Action
             }
             $client = $collection->getClient($clientId);
             if (Yii::$app->request->get('action') == 'check_pay_result') {
+                Yii::$app->response->format = Response::FORMAT_JSON;
                 $client->setPayId(Yii::$app->request->get('id'));
                 return array_merge(['result'=>'success'], $client->getPayResult());
             }

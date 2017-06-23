@@ -10,7 +10,7 @@ use yii\helpers\Json;
 use yii\helpers\Url;
 
 /**
- * 显示支付链接，点击链接弹出支付小窗口
+ * 显示支付链接，点击链接显示支付界面
  *
  * Example:
  *
@@ -18,6 +18,7 @@ use yii\helpers\Url;
  * <?php $payChoice = a76\pay\widgets\PayChoice::begin([
  *     'basePayUrl' => ['site/pay'], // 支付目录
  *     'canCOD' => false, // 是否允许货到付款
+ *     'clientOptions' => ['popup' => false],
  * ]); ?>
  * <script>
  * // 支付信息，此方法会在用户点击支付链接时调用
@@ -63,6 +64,9 @@ class PayChoice extends Widget
     ];
     /**
      * @var array 传送给客户端脚本的参数
+     * [
+     *     'popup' => false, // 默认不弹出小窗口
+     * ]
      */
     public $clientOptions = [];
     /**

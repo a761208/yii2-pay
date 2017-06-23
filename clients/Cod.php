@@ -60,6 +60,6 @@ class Cod extends BaseClient
         return array_merge([
             'pay_result'=>$this->getData('pay_result_' . $this->getPayId()),
             'is_cod'=>true
-        ], parent::getPayResult());
+        ], parent::getPayResult() !== false ? json_decode(parent::getPayResult(), true) : []);
     }
 }
