@@ -57,6 +57,7 @@ class PayNotifyAction extends Action
     public $successCallback;
 
     /**
+     * @return string
      * @throws NotFoundHttpException
      * @throws InvalidConfigException
      */
@@ -65,9 +66,9 @@ class PayNotifyAction extends Action
         $raw = file_get_contents('php://input');
         if (empty($raw)) {
             // POST_RAW_DATA 没有内容
-            return;
+            return null;
         }
-        $clientId = 'weixin'; // TODO：判断回调来源：如微信/支付宝/...
+        $clientId = 'weixin'; // TODO：识别回调来源：如微信/支付宝/...
         /* @var $collection \a76\pay\Collection */
         $collection = Yii::$app->get($this->clientCollection);
         if (!$collection->hasClient($clientId)) {
@@ -75,10 +76,8 @@ class PayNotifyAction extends Action
         }
         /* @var $client \a76\pay\ClientInterface */
         $client = $collection->getClient($clientId);
-        $client->notifyPay($raw); // 处理支付结果
+        $result = $client->notifyPay($raw); // 处理支付结果
         call_user_func($this->successCallback, $client); // 回调用户方法
-        ob_clean(); // 将之前的输出清除，防止返回值错误
-        echo '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
-        return;
+        return $result;
     }
 }

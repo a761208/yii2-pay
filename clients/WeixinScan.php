@@ -1,4 +1,5 @@
 <?php
+
 namespace a76\pay\clients;
 
 use a76\pay\BaseClient;
@@ -16,21 +17,21 @@ class WeixinScan extends BaseClient
     public $api_key;
     public $notify_url;
     public $qr_url;
-    
+
     /**
      * @inheritdoc
      */
-     public function init()
-     {
-         parent::init();
-     }
+    public function init()
+    {
+        parent::init();
+    }
 
     /**
      * @inheritdoc
      */
     protected function defaultName()
     {
-        return 'weixin';
+        return 'weixin_scan';
     }
 
     /**
@@ -40,7 +41,7 @@ class WeixinScan extends BaseClient
     {
         return '微信扫码支付';
     }
-    
+
     /**
      * {@inheritDoc}
      * @see \a76\pay\BaseClient::initPay()
@@ -53,12 +54,12 @@ class WeixinScan extends BaseClient
         $view = Yii::$app->getView();
         $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $this->id . '.php';
         return $view->renderFile($viewFile, [
-            'client'=>$this,
-            'params'=>$params,
-            'prepay'=>$prepay,
+            'client' => $this,
+            'params' => $params,
+            'prepay' => $prepay,
         ]);
     }
-    
+
     /**
      * {@inheritDoc}
      * @see \a76\pay\BaseClient::notifyPay()
@@ -66,27 +67,26 @@ class WeixinScan extends BaseClient
     public function notifyPay($raw)
     {
         $xml = simplexml_load_string($raw, 'SimpleXMLElement', LIBXML_NOCDATA);
-        $xml = (array) $xml;
+        $xml = (array)$xml;
         if ($xml['return_code'] != 'SUCCESS') {
-            echo '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
-            return;
+            return '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
         }
         if ($xml['result_code'] != 'SUCCESS') {
             // 支付失败
-            echo '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
+            return '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
         }
         $sign = $xml['sign'];
         unset($xml['sign']);
         if (WeixinScan::makeSign($xml, $this->api_key) != $sign) {
-            echo '<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[签名失败]]></return_msg></xml>';
-            return;
+            return '<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[签名失败]]></return_msg></xml>';
         }
         $this->setPayId($xml['out_trade_no']);
         $this->setData('pay_result_' . $xml['out_trade_no'], 'success');
         $this->setData('pay_money_' . $xml['out_trade_no'], $xml['cash_fee'] / 100);
         $this->setData('pay_remark_' . $xml['out_trade_no'], $raw);
+        return '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
     }
-    
+
     /**
      * {@inheritDoc}
      * @see \a76\pay\BaseClient::getPayResult()
@@ -94,12 +94,12 @@ class WeixinScan extends BaseClient
     public function getPayResult()
     {
         return array_merge([
-            'pay_result'=>$this->getData('pay_result_' . $this->getPayId()),
-            'pay_money'=>$this->getData('pay_money_' . $this->getPayId()),
-            'pay_remark'=>$this->getData('pay_remark_' . $this->getPayId()),
+            'pay_result' => $this->getData('pay_result_' . $this->getPayId()),
+            'pay_money' => $this->getData('pay_money_' . $this->getPayId()),
+            'pay_remark' => $this->getData('pay_remark_' . $this->getPayId()),
         ], parent::getPayResult() !== false ? json_decode(parent::getPayResult(), true) : []);
     }
-    
+
     /**
      * 微信统一下单接口
      * @param array $params
@@ -122,14 +122,14 @@ class WeixinScan extends BaseClient
         $post['trade_type'] = 'NATIVE';
         $post['sign'] = WeixinScan::makeSign($post, $this->api_key);
         $xml = '<xml>';
-        foreach ($post as $k=>$v) {
+        foreach ($post as $k => $v) {
             $xml .= '<' . $k . '>' . $v . '</' . $k . '>';
         }
         $xml .= '</xml>';
         Yii::error($xml);
         $res = $this->postXmlCurl($xml, $url);
         $xml = simplexml_load_string($res, 'SimpleXMLElement', LIBXML_NOCDATA);
-        $xml = (array) $xml;
+        $xml = (array)$xml;
         if ($xml['return_code'] != 'SUCCESS') {
             throw new \Exception($xml->return_msg);
         }
@@ -137,11 +137,11 @@ class WeixinScan extends BaseClient
             throw new \Exception('code:' . $xml['err_code'] . ';msg:' . $xml['err_code_des']);
         }
         return [
-            'prepay_id'=>$xml['prepay_id'],
-            'code_url'=>$xml['code_url'],
+            'prepay_id' => $xml['prepay_id'],
+            'code_url' => $xml['code_url'],
         ];
     }
-    
+
     /**
      * 生成签名
      * @param array $data 参数列表
@@ -152,7 +152,7 @@ class WeixinScan extends BaseClient
     {
         ksort($data);
         $stringA = '';
-        foreach ($data as $k=>$v) {
+        foreach ($data as $k => $v) {
             if (empty($v) && $v !== '0') {
                 continue;
             }
