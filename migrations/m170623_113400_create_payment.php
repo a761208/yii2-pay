@@ -10,7 +10,10 @@ class m170623_113400_create_payment extends Migration
             'k'=>$this->string(128), // PK
             'v'=>$this->text(), // 值
         ]);
-        $this->addPrimaryKey('PK_payment', '{{%payment}}', ['k']);
+        try {
+            $this->addPrimaryKey('PK_payment', '{{%payment}}', ['k']);
+        } catch (\Exception $e) {
+        }
     }
 
     public function down()
