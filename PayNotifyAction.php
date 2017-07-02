@@ -17,8 +17,9 @@ use Yii;
  *     public function actions()
  *     {
  *         return [
- *             'pay-notify' => [
+ *             'pay-notify-weixin' => [
  *                 'class' => 'a76\pay\PayNotifyAction',
+ *                 'clientId' => 'weixin_scan',
  *                 'successCallback' => [$this, 'successCallback'],
  *             ],
  *         ]
@@ -42,6 +43,10 @@ class PayNotifyAction extends Action
      * @var string Config中设置的组件名称
      */
     public $clientCollection = 'payClientCollection';
+    /**
+     * @var string
+     */
+    public $clientId;
     /**
      * @var callable PHP回调方法，支付成功后调用，此方法接受\a76\pay\ClientInterface的实例参数
      * 此方法输出内容或返回值将被丢弃
@@ -68,14 +73,13 @@ class PayNotifyAction extends Action
             // POST_RAW_DATA 没有内容
             return null;
         }
-        $clientId = 'weixin'; // TODO：识别回调来源：如微信/支付宝/...
         /* @var $collection \a76\pay\Collection */
         $collection = Yii::$app->get($this->clientCollection);
-        if (!$collection->hasClient($clientId)) {
-            throw new NotFoundHttpException("无法识别支付类型：'{$clientId}'");
+        if (!$collection->hasClient($this->clientId)) {
+            throw new NotFoundHttpException("无法识别支付类型：'{$this->clientId}'");
         }
         /* @var $client \a76\pay\ClientInterface */
-        $client = $collection->getClient($clientId);
+        $client = $collection->getClient($this->clientId);
         $result = $client->notifyPay($raw); // 处理支付结果
         call_user_func($this->successCallback, $client); // 回调用户方法
         return $result;

@@ -43,13 +43,19 @@ class WeixinScan extends BaseClient
     }
 
     /**
+     * @param $params array
+     * [
+     *     'order_no' 订单号
+     *     'order_name' 订单名称
+     *     'order_money' 订单金额
+     * ]
      * {@inheritDoc}
      * @see \a76\pay\BaseClient::initPay()
      */
     public function initPay($params)
     {
         $prepay = $this->unifiedorder($params);
-        $this->setData('pay_result_' . $params['id'], 'waiting');
+        $this->setData('pay_result_' . $params['order_no'], 'waiting');
         /* @var $view \yii\web\View */
         $view = Yii::$app->getView();
         $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'weixin_scan.php';
@@ -94,6 +100,7 @@ class WeixinScan extends BaseClient
     public function getPayResult()
     {
         return array_merge([
+            'pay_id' => $this->getPayId(),
             'pay_result' => $this->getData('pay_result_' . $this->getPayId()),
             'pay_money' => $this->getData('pay_money_' . $this->getPayId()),
             'pay_remark' => $this->getData('pay_remark_' . $this->getPayId()),
@@ -114,9 +121,9 @@ class WeixinScan extends BaseClient
         $post['mch_id'] = $this->mch_id;
         $post['device_info'] = 'WEB';
         $post['nonce_str'] = Yii::$app->security->generateRandomString(32);
-        $post['body'] = $params['name'];
-        $post['out_trade_no'] = $params['id'];
-        $post['total_fee'] = round($params['money'] * 100);
+        $post['body'] = $params['order_name'];
+        $post['out_trade_no'] = $params['order_no'];
+        $post['total_fee'] = round($params['order_money'] * 100);
         $post['spbill_create_ip'] = Yii::$app->request->userIP;
         $post['notify_url'] = Yii::$app->request->hostInfo . $this->notify_url;
         $post['trade_type'] = 'NATIVE';
@@ -131,7 +138,7 @@ class WeixinScan extends BaseClient
         $xml = simplexml_load_string($res, 'SimpleXMLElement', LIBXML_NOCDATA);
         $xml = (array)$xml;
         if ($xml['return_code'] != 'SUCCESS') {
-            throw new \Exception($xml->return_msg);
+            throw new \Exception($xml['return_msg']);
         }
         if ($xml['result_code'] != 'SUCCESS') {
             throw new \Exception('code:' . $xml['err_code'] . ';msg:' . $xml['err_code_des']);
