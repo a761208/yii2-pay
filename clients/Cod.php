@@ -36,7 +36,7 @@ class Cod extends BaseClient
         $this->notifyPay('');
         /* @var $view \yii\web\View */
         $view = Yii::$app->getView();
-        $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $this->id . '.php';
+        $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'cod.php';
         return $view->renderFile($viewFile, [
             'params'=>$params,
         ]);

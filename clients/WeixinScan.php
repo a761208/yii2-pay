@@ -52,7 +52,7 @@ class WeixinScan extends BaseClient
         $this->setData('pay_result_' . $params['id'], 'waiting');
         /* @var $view \yii\web\View */
         $view = Yii::$app->getView();
-        $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . $this->id . '.php';
+        $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'weixin_scan.php';
         return $view->renderFile($viewFile, [
             'client' => $this,
             'params' => $params,
