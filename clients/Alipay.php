@@ -77,14 +77,9 @@ class Alipay extends BaseClient
         }
         include_once Yii::getAlias('@vendor/a76/yii2-pay/clients/alipay/AopSdk.php');
         $aop = new \AopClient();
-        $aop->gatewayUrl = 'https://openapi.alipay.com/gateway.do';
         $aop->appId = $this->app_id;
         $aop->rsaPrivateKey = $this->merchant_private_key;
         $aop->alipayrsaPublicKey = $this->alipay_public_key;
-        $aop->apiVersion = '1.0';
-        $aop->postCharset = 'utf-8';
-        $aop->format = 'json';
-        $aop->signType = 'RSA';
         $request = new \AlipayTradeWapPayRequest();
         $request->setBizContent(json_encode([
             'body' => $params['order_name'],
@@ -107,37 +102,28 @@ class Alipay extends BaseClient
      */
     public function notifyPay($raw)
     {
-        // gmt_create=2017-07-02+21%3A28%3A09
-        // &charset=utf-8
-        // &seller_email=404584792%40qq.com
-        // &subject=%E6%B5%8B%E8%AF%95%E5%95%86%E5%93%81
-        // &sign=hAThizBqwGw%2FvsL8OG0QQF8gZ1v7nMIBVOfOzMXAz19By7%2FIdNL556BW%2FAf7dRQzpIgmUmCHzhlTku7YLFU4dfW4PLlZ4uWK%2F3rg%2BZCz29G5vzFGTLm6HC7AMna154beOJOaDsUv1yAFoRAqMFiXGDsWq2tSIj0%2FFFeINdCBs3I%3D
-        // &body=%E6%B5%8B%E8%AF%95%E5%95%86%E5%93%81
-        // &buyer_id=2088002636792212
-        // &invoice_amount=0.02
-        // &notify_id=dc711da64351231b64c3ea76a93964chme
-        // &fund_bill_list=%5B%7B%22amount%22%3A%220.02%22%2C%22fundChannel%22%3A%22ALIPAYACCOUNT%22%7D%5D
-        // &notify_type=trade_status_sync
-        // &trade_status=TRADE_SUCCESS
-        // &receipt_amount=0.02
-        // &app_id=2016050901378164
-        // &buyer_pay_amount=0.02
-        // &sign_type=RSA&seller_id=2088021073996560
-        // &gmt_payment=2017-07-02+21%3A28%3A09
-        // &notify_time=2017-07-02+21%3A28%3A10
-        // &version=1.0
-        // &out_trade_no=Z20170702212749000000
-        // &total_amount=0.02
-        // &trade_no=2017070221001004210289517745
-        // &auth_app_id=2016050901378164
-        // &buyer_logon_id=a76***%40gmail.com
-        // &point_amount=0.00
         parse_str($raw, $post);
+        $sign = $post['sign'];
+        $signType = $post['sign_type'];
+        unset($post['sign']);
+        unset($post['sign_type']);
+        include_once Yii::getAlias('@vendor/a76/yii2-pay/clients/alipay/AopSdk.php');
+        $aop = new \AopClient();
+        $aop->appId = $this->app_id;
+        $aop->rsaPrivateKey = $this->merchant_private_key;
+        $aop->alipayrsaPublicKey = $this->alipay_public_key;
+        $checkSign = $aop->verify($aop->getSignContent($post), $sign, Yii::getAlias($this->alipay_public_key), $signType);
+        if (!$checkSign) {
+            Yii::error('支付宝异步通知签名验证失败：' . $raw);
+            return 'sign_error';
+        }
         $out_trade_no = $post['out_trade_no'];
         $this->setPayId($out_trade_no);
         $this->setData('pay_result_' . $out_trade_no, 'success');
         $this->setData('pay_money_' . $out_trade_no, $post['total_amount']);
         $this->setData('pay_remark_' . $out_trade_no, $raw);
+
+        return 'success';
     }
 
     /**
