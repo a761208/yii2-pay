@@ -55,18 +55,6 @@ class Alipay extends BaseClient
     public function initPay($params)
     {
         if (isset($params['returned'])) {
-            // ?total_amount=9.00
-            // &timestamp=2016-08-11+19%3A36%3A01
-            // &sign=ErCRRVmW%2FvXu1XO76k%2BUr4gYKC5%2FWgZGSo%2FR7nbL%2FPU7yFXtQJ2CjYPcqumxcYYB5x%2FzaRJXWBLN3jJXr01Icph8AZGEmwNuzvfezRoWny6%2Fm0iVQf7hfgn66z2yRfXtRSqtSTQWhjMa5YXE7MBMKFruIclYVTlfWDN30Cw7k%2Fk%3D
-            // &trade_no=2016081121001004630200142207
-            // &sign_type=RSA2
-            // &charset=UTF-8
-            // &seller_id=2088111111116894
-            // &method=alipay.trade.wap.pay.return
-            // &app_id=2016040501024706
-            // &out_trade_no=70501111111S001111119
-            // &version=1.0
-
             /* @var $view \yii\web\View */
             $view = Yii::$app->getView();
             $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'alipay.php';
@@ -75,11 +63,7 @@ class Alipay extends BaseClient
                 'params' => $params,
             ]);
         }
-        include_once Yii::getAlias('@vendor/a76/yii2-pay/clients/alipay/AopSdk.php');
-        $aop = new \AopClient();
-        $aop->appId = $this->app_id;
-        $aop->rsaPrivateKey = $this->merchant_private_key;
-        $aop->alipayrsaPublicKey = $this->alipay_public_key;
+        $aop = $this->loadAlipay();
         $request = new \AlipayTradeWapPayRequest();
         $request->setBizContent(json_encode([
             'body' => $params['order_name'],
@@ -107,11 +91,7 @@ class Alipay extends BaseClient
         $signType = $post['sign_type'];
         unset($post['sign']);
         unset($post['sign_type']);
-        include_once Yii::getAlias('@vendor/a76/yii2-pay/clients/alipay/AopSdk.php');
-        $aop = new \AopClient();
-        $aop->appId = $this->app_id;
-        $aop->rsaPrivateKey = $this->merchant_private_key;
-        $aop->alipayrsaPublicKey = $this->alipay_public_key;
+        $aop = $this->loadAlipay();
         $checkSign = $aop->verify($aop->getSignContent($post), $sign, Yii::getAlias($this->alipay_public_key), $signType);
         if (!$checkSign) {
             Yii::error('支付宝异步通知签名验证失败：' . $raw);
@@ -138,5 +118,19 @@ class Alipay extends BaseClient
             'pay_money' => $this->getData('pay_money_' . $this->getPayId()),
             'pay_remark' => $this->getData('pay_remark_' . $this->getPayId()),
         ], parent::getPayResult() !== false ? json_decode(parent::getPayResult(), true) : []);
+    }
+
+    /**
+     * 加载支付宝SDK
+     * @return \AopClient
+     */
+    private function loadAlipay()
+    {
+        include_once Yii::getAlias('@vendor/a76/yii2-pay/clients/alipay/AopSdk.php');
+        $aop = new \AopClient();
+        $aop->appId = $this->app_id;
+        $aop->rsaPrivateKey = $this->merchant_private_key;
+        $aop->alipayrsaPublicKey = $this->alipay_public_key;
+        return $aop;
     }
 }
