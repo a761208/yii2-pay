@@ -4,6 +4,7 @@ namespace a76\pay\clients;
 
 use a76\pay\BaseClient;
 use Yii;
+use yii\helpers\Html;
 use yii\helpers\Url;
 
 /**
@@ -45,6 +46,11 @@ class Pingan extends BaseClient
                     return $this->bindCard($params);
                 case 'bind_result': // 绑定银行卡返回页
                     return '<script>window.location.href="' . $params['return_url'] . '";</script>';
+                case 'send_sms': // 发送短信验证码
+                    return $this->sendSms(Yii::$app->request->get());
+                case 'pay':
+                default:
+                    return $this->pay(Yii::$app->request->get());
             }
         }
         if (isset($params['returned'])) {
@@ -57,34 +63,8 @@ class Pingan extends BaseClient
             //$result = $this->validate($orig, $sign, Yii::getAlias($this->tTrustPayCertFile));
 
             $orig = mb_convert_encoding($orig, 'UTF-8', 'GBK');
-            return '结果：' . \yii\helpers\Html::encode($orig);
+            return '结果：' . Html::encode($orig);
         }
-
-        $this->setData('pay_result_' . $params['id'], 'waiting');
-
-        $gateway_url = 'https://ebank.sdb.com.cn/khpayment/UnionAPI_Open.do';
-        $return_url = Url::current(['returned' => 1], true);
-        $notify_url = Url::to(['/site/pay-notify'], true);
-
-        $data = array(
-            'masterId' => $this->masterId,
-            'customerId' => '123',
-            'orderId' => $params['id'],
-            'dateTime' => date('YmdHis'),
-        );
-
-        $data = $this->_getData($data);
-
-        list($orig, $sign) = $this->_getOrigAndSing(Yii::getAlias($this->merchantCertFile), $data);
-
-        $parameter = array(
-            'orig' => $orig,
-            'sign' => $sign,
-            'returnurl' => $return_url,
-            'NOTIFYURL' => $notify_url,
-        );
-
-        return $this->showHtml($gateway_url, $parameter);
     }
 
     /**
@@ -93,8 +73,28 @@ class Pingan extends BaseClient
      */
     public function notifyPay($raw)
     {
-        Yii::error('平安银行回调：' . $raw);
-        echo '支付结果回调';
+        parse_str($raw, $post);
+        $orig = $post['orig'];
+        $sign = $post['sign'];
+
+        // 解码
+        $formSign = $this->_base64_url_decode(urlencode($sign));
+        $formOrig = $this->_base64_url_decode(urlencode($orig));
+
+        // 验证签名是否正确
+        $result = $this->validate($formOrig, $formSign, Yii::getAlias($this->tTrustPayCertFile));
+        if (!$result) {
+            return;
+        }
+        $formOrig = mb_convert_encoding($formOrig, 'UTF-8', 'GBK');
+        $orig_data = $this->xml_to_array($formOrig);
+
+        if ($orig_data['status'] == '01') {
+            $this->setPayId($orig_data['orderId']);
+            $this->setData('pay_result_' . $orig_data['orderId'], 'success');
+            $this->setData('pay_money_' . $orig_data['orderId'], $orig_data['amount']);
+            $this->setData('pay_remark_' . $orig_data['orderId'], $formOrig);
+        }
     }
 
     /**
@@ -104,6 +104,7 @@ class Pingan extends BaseClient
     public function getPayResult()
     {
         return array_merge([
+            'pay_id' => $this->getPayId(),
             'pay_result' => $this->getData('pay_result_' . $this->getPayId()),
             'pay_money' => $this->getData('pay_money_' . $this->getPayId()),
             'pay_remark' => $this->getData('pay_remark_' . $this->getPayId()),
@@ -124,8 +125,8 @@ class Pingan extends BaseClient
         // 组装订单数据
         $data = array(
             'masterId' => $this->masterId,
-            'customerId'=> $params['customerId'],
-            'orderId' =>  $this->masterId . date('Ymd') . rand(10000000, 99999999),
+            'customerId' => $params['customerId'],
+            'orderId' => $this->masterId . date('Ymd') . rand(10000000, 99999999),
             'dateTime' => date('YmdHis'),
         );
 
@@ -137,8 +138,8 @@ class Pingan extends BaseClient
         $parameter = array(
             'orig' => $orig,
             'sign' => $sign,
-            'returnurl' =>Url::to(['/site/pay', 'payclient'=>'pingan', 'action'=>'bind_result', 'return_url'=>$return_url], true),
-            'NOTIFYURL' =>$notify_url,
+            'returnurl' => Url::to(['/site/pay', 'payclient' => 'pingan', 'action' => 'bind_result', 'return_url' => $return_url], true),
+            'NOTIFYURL' => $notify_url,
         );
 
         return $this->showHtml($gateway, $parameter);
@@ -184,7 +185,127 @@ class Pingan extends BaseClient
         $formOrig = iconv("GBK", "UTF-8", $formOrig);
         $orig_data = $this->xml_to_array($formOrig);
 
-        return $orig_data['body'];
+        if (!empty($orig_data['body'])) {
+            return $orig_data['body'];
+        } else {
+            return [];
+        }
+    }
+
+    /**
+     * 发送短信
+     * @param $params array
+     * @return false|array
+     */
+    public function sendSms($params)
+    {
+        $send_url = 'https://ebank.sdb.com.cn/khpayment/UnionAPI_SSMS.do';
+
+        $data = array(
+            'masterId' => $this->masterId,
+            'orderId' => $params['orderId'],
+            'currency' => 'RMB',
+            'amount' => $params['amount'],
+            'paydate' => date('YmdHis'),
+            'customerId' => $params['customerId'],
+            'OpenId' => $params['OpenId'],
+        );
+
+        $xml_data = $this->array_to_xml($data);
+
+        // 获取签名后的orig和sign
+        $orig = $this->getOrig($xml_data);
+        $sign = $this->getSign(Yii::getAlias($this->merchantCertFile), $xml_data);
+
+        // 通过curl请求接口
+        $parms = 'orig=' . $orig . '&sign=' . $sign;
+        $rsponse = $this->curl($send_url, $parms);
+
+        $rsponse = preg_split('/\r|\n/', $rsponse, -1, PREG_SPLIT_NO_EMPTY);
+        $rsponseSign = substr($rsponse[0], 5);
+        $rsponseOrig = substr($rsponse[1], 5);
+
+        // 解码
+        $formSign = $this->_base64_url_decode($rsponseSign);
+        $formOrig = $this->_base64_url_decode($rsponseOrig);
+        // 验证签名是否正确
+        $result = $this->validate($formOrig, $formSign, Yii::getAlias($this->tTrustPayCertFile));
+        if (!$result) {
+            return false;
+        }
+
+        // 输出结果
+        $formOrig = iconv("GBK", "UTF-8", $formOrig);
+        /*
+         * <kColl id="output" append="false">
+         *     <field id="errorCode" value="UKHPAY43" required="false"/>
+         *     <field id="errorMsg" value="单笔支付不能小于0.1元" required="false"/>
+         *     <field id="masterId" value="2000808425" required="false"/>
+         *     <field id="orderId" value="20008084252017070464828167" required="false"/>
+         *     <field id="currency" value="RMB" required="false"/>
+         *     <field id="amount" value="0.02" required="false"/>
+         *     <field id="status" value="02" required="false"/>
+         *     <field id="paydate" value="20170704100137" required="false"/>
+         *     <field id="customerId" value="256823" required="false"/>
+         * </kColl>
+         */
+        return $this->xml_to_array($formOrig);
+    }
+
+    /**
+     * 支付
+     * @param $params array
+     * @return false|array
+     */
+    public function pay($params)
+    {
+        $this->setData('pay_result_' . $params['orderId'], 'waiting');
+
+        $send_url = 'https://ebank.sdb.com.cn/khpayment/UnionAPI_Submit.do';
+        $notify_url = Url::to(['/site/pay-notify-pingan'], true);
+
+        $data = array (
+            'masterId' => $this->masterId,
+            'orderId' => $params['orderId'],
+            'currency' => 'RMB',
+            'amount' => $params['amount'],
+            'objectName' => $params['objectName'],
+            'paydate' => $params['paydate'],
+            'validtime' => '0',
+            'remark' => '',
+            'customerId' => $params['customerId'],
+            'OpenId' => $params['OpenId'],
+            'NOTIFYURL' => $notify_url,
+            'verifyCode' => $params['verifyCode']
+        );
+
+        $xml_data = $this->array_to_xml ( $data );
+
+        // 获取签名后的orig和sign
+        $orig = $this->getOrig ( $xml_data );
+        $sign = $this->getSign ( Yii::getAlias($this->merchantCertFile), $xml_data );
+
+        // 通过curl请求接口
+        $parms = 'orig=' . $orig . '&sign=' . $sign;
+        $rsponse = $this->curl ( $send_url, $parms );
+
+        $rsponse = preg_split('/\r|\n/', $rsponse, -1, PREG_SPLIT_NO_EMPTY);
+        $rsponseSign = substr($rsponse[0], 5);
+        $rsponseOrig = substr($rsponse[1], 5);
+
+        // 解码
+        $formSign = $this->_base64_url_decode($rsponseSign);
+        $formOrig = $this->_base64_url_decode($rsponseOrig);
+        // 验证签名是否正确
+        $result = $this->validate($formOrig, $formSign, Yii::getAlias($this->tTrustPayCertFile));
+        if (!$result) {
+            return false;
+        }
+
+        $formOrig = iconv("GBK", "UTF-8", $formOrig);
+        $orig_data = $this->xml_to_array($formOrig);
+
+        return $orig_data;
     }
 
     /**
@@ -193,7 +314,8 @@ class Pingan extends BaseClient
      * @param array $parameter
      * @return string
      */
-    private function showHtml($gateway, $parameter) {
+    private function showHtml($gateway, $parameter)
+    {
         $html = '<html><head><meta charset="UTF-8" /></head><body>';
         $html .= '<form method="post" name="P_FORM" action="' . $gateway . '">';
         foreach ($parameter as $key => $val) {
