@@ -272,7 +272,7 @@ class Pingan extends BaseClient
             'objectName' => $params['objectName'],
             'paydate' => $params['paydate'],
             'validtime' => '0',
-            'remark' => '',
+            'remark' => $params['remark'],
             'customerId' => $params['customerId'],
             'OpenId' => $params['OpenId'],
             'NOTIFYURL' => $notify_url,
