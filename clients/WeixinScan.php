@@ -59,6 +59,7 @@ class WeixinScan extends BaseClient
         /* @var $view \yii\web\View */
         $view = Yii::$app->getView();
         $viewFile = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'weixin_scan.php';
+
         return $view->renderFile($viewFile, [
             'client' => $this,
             'params' => $params,

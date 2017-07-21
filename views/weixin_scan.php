@@ -28,8 +28,18 @@ $params['action'] = 'check_pay_result';
 
 <body>
 <?php $this->beginBody() ?>
-<div id="qr"><?php echo Html::img(str_replace('{$content}', $prepay['code_url'], $client->qr_url));?></div>
+<div id="qr" style="text-align: center;"><?php echo Html::img(str_replace('{$content}', $prepay['code_url'], $client->qr_url));?></div>
+<div style="text-align: center;"><button class="btn btn-default" type="button" onclick="closeSelf()">返回</button></div>
 <?php $this->endBody() ?>
+<script>
+    function closeSelf() {
+        if (parent) {
+            parent.document.getElementById('yii_pay_choice').remove()
+        } else {
+            window.close();
+        }
+    }
+</script>
 </body>
 </html>
 <?php $this->endPage() ?>
